@@ -75,8 +75,6 @@ pub struct CompileConfig {
     /// Server for `typst watch` to HTML.
     #[cfg(feature = "http-server")]
     pub server: Option<HtmlServer>,
-    /// Whether to create valid XML in HTML output
-    pub xml: bool,
 }
 
 impl CompileConfig {
@@ -123,6 +121,7 @@ impl CompileConfig {
                     OutputFormat::Png => "png",
                     OutputFormat::Svg => "svg",
                     OutputFormat::Html => "html",
+                    OutputFormat::Xhtml => "xhtml",
                 },
             ))
         });
@@ -160,7 +159,6 @@ impl CompileConfig {
             export_cache: ExportCache::new(),
             #[cfg(feature = "http-server")]
             server,
-            xml: args.xml,
         })
     }
 }
@@ -222,7 +220,7 @@ fn compile_and_export(
     config: &mut CompileConfig,
 ) -> Warned<SourceResult<Vec<Output>>> {
     match config.output_format {
-        OutputFormat::Html => {
+        OutputFormat::Xhtml | OutputFormat::Html => {
             let Warned { output, warnings } = typst::compile::<HtmlDocument>(world);
             let result = output.and_then(|document| export_html(&document, config));
             Warned {
@@ -240,7 +238,11 @@ fn compile_and_export(
 
 /// Export to HTML.
 fn export_html(document: &HtmlDocument, config: &CompileConfig) -> SourceResult<()> {
-    let html = typst_html::html(document, config.xml)?;
+    let html = match config.output_format {
+        OutputFormat::Html => typst_html::html(document)?,
+        OutputFormat::Xhtml => typst_html::xhtml(document)?,
+        OutputFormat::Pdf | OutputFormat::Png | OutputFormat::Svg => unreachable!(),
+    };
     let result = config.output.write(html.as_bytes());
 
     #[cfg(feature = "http-server")]
@@ -249,7 +251,7 @@ fn export_html(document: &HtmlDocument, config: &CompileConfig) -> SourceResult<
     }
 
     result
-        .map_err(|err| eco_format!("failed to write HTML file ({err})"))
+        .map_err(|err| eco_format!("failed to write (X)HTML file ({err})"))
         .at(Span::detached())
 }
 
@@ -268,7 +270,7 @@ fn export_paged(
         OutputFormat::Svg => {
             export_image(document, config, ImageExportFormat::Svg).at(Span::detached())
         }
-        OutputFormat::Html => unreachable!(),
+        OutputFormat::Html | OutputFormat::Xhtml => unreachable!(),
     }
 }
 

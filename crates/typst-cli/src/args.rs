@@ -271,10 +271,6 @@ pub struct CompileArgs {
     /// apart from file names and line numbers.
     #[arg(long = "timings", value_name = "OUTPUT_JSON")]
     pub timings: Option<Option<PathBuf>>,
-
-    /// Whether to output valid XML for HTML export
-    #[clap(long = "xml")]
-    pub xml: bool,
 }
 
 /// Arguments for the construction of a world. Shared by compile, watch, and
@@ -445,6 +441,7 @@ pub enum OutputFormat {
     Png,
     Svg,
     Html,
+    Xhtml,
 }
 
 display_possible_values!(OutputFormat);

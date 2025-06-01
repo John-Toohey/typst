@@ -2,7 +2,7 @@
 
 mod encode;
 
-pub use self::encode::html;
+pub use self::encode::{html, xhtml};
 
 use comemo::{Track, Tracked, TrackedMut};
 use typst_library::diag::{bail, warning, At, SourceResult};

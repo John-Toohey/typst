@@ -7,8 +7,20 @@ use typst_library::layout::Frame;
 use typst_syntax::Span;
 
 /// Encodes an HTML document into a string.
-pub fn html(document: &HtmlDocument, xml: bool) -> SourceResult<String> {
-    let mut w = Writer { pretty: true, xml, ..Writer::default() };
+pub fn html(document: &HtmlDocument) -> SourceResult<String> {
+    let mut w = Writer { pretty: true, ..Writer::default() };
+    w.buf.push_str("<!DOCTYPE html>");
+    write_indent(&mut w);
+    write_element(&mut w, &document.root)?;
+    if w.pretty {
+        w.buf.push('\n');
+    }
+    Ok(w.buf)
+}
+
+/// Encodes an XHTML document into a string.
+pub fn xhtml(document: &HtmlDocument) -> SourceResult<String> {
+    let mut w = Writer { pretty: true, xml: true, ..Writer::default() };
     w.buf.push_str("<!DOCTYPE html>");
     write_indent(&mut w);
     write_element(&mut w, &document.root)?;
